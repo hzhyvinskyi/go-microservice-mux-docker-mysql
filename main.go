@@ -3,30 +3,24 @@ package main
 import (
 	"log"
 	"net/http"
+
+	"go-microservice-mux-docker-mysql/app"
 	"go-microservice-mux-docker-mysql/db"
 	"github.com/gorilla/mux"
 )
 
-func setupRouter(router *mux.Router) {
-	router.Methods("POST").Path("/endpoint").HandlerFunc(postHandler)
-}
-
-func postHandler(w http.ResponseWriter, r *http.Request) {
+func main() {
 	database, err := db.CreateDatabase()
 	if err != nil {
-		log.Fatal("Database connection failed!")
+		log.Fatal("Database connection failed: %s", err.Error())
 	}
 
-	_, err = database.Exec("INSERT INTO `test` (name) VALUES ('testName')")
-	if err != nil {
-		log.Fatal("Database QUERY failed!")
+	app := &app.App {
+		mux.NewRouter().StrictSlash(true),
+		database,
 	}
 
-	log.Println("You called resource!")
-}
+	app.SetupRouter()
 
-func main() {
-	router := mux.NewRouter().StrictSlash(true)
-	setupRouter(router)
-	log.Fatal(http.ListenAndServe(":9092", router))
+	log.Fatal(http.ListenAndServe(":9092", app.Router))
 }
