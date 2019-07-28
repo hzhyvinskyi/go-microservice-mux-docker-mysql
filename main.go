@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"go-microservice-mux-docker-mysql/app"
 	"go-microservice-mux-docker-mysql/db"
-	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -15,7 +15,7 @@ func main() {
 		log.Fatal("Database connection failed: %s", err.Error())
 	}
 
-	app := &app.App {
+	app := &app.App{
 		mux.NewRouter().StrictSlash(true),
 		database,
 	}
