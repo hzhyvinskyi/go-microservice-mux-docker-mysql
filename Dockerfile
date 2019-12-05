@@ -1,11 +1,9 @@
-FROM scratch
+FROM tailor/docker-libvips
 
 ENV PORT 8080
 
 EXPOSE $PORT
 
-COPY ./bin/app /
+COPY . /
 
-COPY .env /
-
-CMD ["/app"]
+CMD ["/bin/app"]

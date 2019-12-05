@@ -5,5 +5,5 @@ import (
 )
 
 func mapUrls(router *http.ServeMux) {
-	router.HandleFunc("/convert", ConvertHandler())
+	router.HandleFunc("/v1/convert", ConvertHandler)
 }
