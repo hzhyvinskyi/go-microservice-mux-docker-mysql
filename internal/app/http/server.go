@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"os"
@@ -29,8 +30,8 @@ func Serve(listenAddr string) {
 }
 
 func newWebserver(listenAddr string) *http.Server {
-	router := http.NewServeMux()
-	mapUrls(router)
+	router := mux.NewRouter()
+	mapUrls(*router)
 
 	return &http.Server{
 		Addr:         listenAddr,
