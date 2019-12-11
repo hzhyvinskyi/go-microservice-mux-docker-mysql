@@ -31,7 +31,8 @@ func Serve(listenAddr string) {
 
 func newWebserver(listenAddr string) *http.Server {
 	router := mux.NewRouter()
-	mapUrls(*router)
+
+	mapUrls(router)
 
 	return &http.Server{
 		Addr:         listenAddr,

@@ -6,58 +6,40 @@ import (
 	"net/http"
 )
 
+const MaxMemory = 10 << 20
+
 func ConvertHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	if err := r.ParseMultipartForm(10 << 20); err != nil {
-		restError := errors.RestError{
-			Message: "Max file size is 10MB",
-			Status:	http.StatusBadRequest,
-			Error:	"bad_request",
-		}
-		w.WriteHeader(restError.Status)
-		w.Write([]byte(restError.Message))
+	if err := r.ParseMultipartForm(MaxMemory); err != nil {
+		errors.Response(w, "Max file size is 10MB", http.StatusBadRequest)
 		return
 	}
 
 	file, header, err := r.FormFile("image")
 	if err != nil {
-		restError := errors.RestError{
-			Message: "Error while getting file",
-			Status:	http.StatusBadRequest,
-			Error:	"bad_request",
-		}
-		w.WriteHeader(restError.Status)
-		w.Write([]byte(restError.Message))
+		errors.Response(w, "File retrieving error", http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
 
-	image, err := services.Upload(file, header)
+	tempFile, err := services.Upload(ctx, file, header)
 	if err != nil {
-		restError := errors.RestError{
-			Message: "Error while uploading file",
-			Status:	http.StatusBadRequest,
-			Error:	"bad_request",
-		}
-		w.WriteHeader(restError.Status)
-		w.Write([]byte(restError.Message))
+		errors.Response(w, "File upload error", http.StatusBadRequest)
 		return
 	}
 
-	converted, err := services.Convert(ctx, image)
-	if err != nil {
-		restError := errors.RestError{
-			Message: "Error while converting",
-			Status:	http.StatusBadRequest,
-			Error:	"bad_request",
-		}
-		w.WriteHeader(restError.Status)
-		w.Write([]byte(restError.Message))
+	if err = services.Convert(ctx, tempFile.Name()); err != nil {
+		errors.Response(w, "File convert error", http.StatusBadRequest)
+		return
+	}
+
+	if err = services.Remove(ctx, tempFile.Name()); err != nil {
+		errors.Response(w, "File remove error", http.StatusBadRequest)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Add("Content-Type", "image/webp")
-	http.ServeFile(w, r, converted.Name())
+	http.ServeFile(w, r, services.OutFilePath)
 }
